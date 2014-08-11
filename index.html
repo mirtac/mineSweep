@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+<title>Minesweeper</title>
+<style>
+#onlineUsers {position:fixed;right:5%;}
+
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+width =0;
+height= 0;
+size = 0;
+var socket;
+
+function init(mineX,mineY,canvasSize){
+		width = mineX;
+		height= mineY;
+		size = canvasSize/width;
+		var canvas = document.getElementById('mineArea');
+		canvas.addEventListener('mousedown', function(e) {
+						var offset = $(e.currentTarget).offset();  
+						var x = e.pageX - offset.left;  
+						var y = e.pageY - offset.top;			
+
+						socket.emit('sweep', {'areaX':Math.floor(x/size),'areaY':Math.floor(y/size)});
+						});
+		draw();
+}
+function socketInit(){
+		socket = io().connect('http://linux.cs.ccu.edu.tw:3000');
+		socket.on('numUser',function(data){$('#onlineUsers').html('online users:  '+data.numUser);});
+		socket.on('disconnect',function(){console.log('disconnect');});
+		socket.on('message',function(data){document.getElementById('message').value = data.msg;});
+		socket.on('gameStart',function(data){init(data.mineX,data.mineY,data.size)});
+		socket.on('readyPlay',function(data){
+						$('#player1').html(data.p1);
+						$('#player2').html(data.p2);
+						$('#onlineUsers').html('online users:  '+data.numUser);
+						/*TODO $("#start").attr("disabled", false);
+						  $('#start').html('rematch');*/
+						});
+		socket.on('mesg',function(data){$('#mesg').html(data.msg);});
+		socket.on('gameOver',function(data){socket.close();});
+		socket.on('sweep',function(data){
+						$('#score1').html(data.score1);
+						$('#score2').html(data.score2);
+						$('#remainArea').html(data.remainArea);
+						if(data.who==0)return;
+						var canvas = document.getElementById('mineArea');
+						if (canvas.getContext){
+						var ctx = canvas.getContext('2d');
+						if(data.who==1)type="rgb(135,216,255)";
+						else type="rgb(148,30,93)";
+						ctx.fillStyle = type;
+						ctx.fillRect(data.areaX*size, data.areaY*size, size, size);
+						ctx.fillStyle="rgb(0,0,0)";
+						ctx.font = '40px Arial';
+						if(data.who==1)type="rgb(0,0,0)";
+						else type="rgb(255,255,255)";
+						if(data.num==9)tmpchar='X';
+						else{tmpchar=data.num;}
+						ctx.fillStyle = type;
+						ctx.fillText(tmpchar,data.areaX*size,data.areaY*size+size,size);
+						}			
+		});
+}
+
+function draw(){
+		var canvas = document.getElementById('mineArea');
+		if (canvas.getContext){
+				var ctx = canvas.getContext('2d');
+				type1="rgb(0,0,0)";
+				type2="rgb(255,255,255)";
+				for(j=0;j<height;j++){
+						for(i=0;i<width;i++){			
+								if( ( (i+j) %2 )==0)ctx.fillStyle = type2;
+								else	ctx.fillStyle = type1;						
+								ctx.fillRect(i*size, j*size, size, size);								
+						}
+				}
+		}
+}
+
+</script>
+</head>
+<body>
+<div id="onlineUsers"></div>
+<ul id="messages"></ul>
+<form action="">
+<input type="text" id="name" placeholder="name"></input><br>
+<!--input id="message" autocomplete="off" /--><button id="start">start game</button>
+</form>
+<div>
+<table>
+<tr><td id="player1"></td><td id="score1">0</td></tr>
+<tr><td id="player2"></td><td id="score2">0</td></tr>
+<tr><td>remain safe area</td><td id="remainArea">0</td></tr>
+</table>
+
+</div>
+<div align="center">
+<canvas id="mineArea" width="400" height="400" ></canvas>
+</div>
+<br/><h1 id="mesg" align="center"></h1>
+
+
+
+<script>
+$('#mineArea').css('background-color', 'rgba(158, 167, 184, 0.2)');
+
+$('form').submit(function(){  
+				socketInit();
+				socket.emit('create room',{name:$('#name').val(),canvasSize:400});
+				//$('#message').val('');
+				$("#start").attr("disabled", true);
+
+				return false;
+				});
+
+</script>
+</body>
+</html>
+
+
