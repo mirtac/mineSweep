@@ -3,7 +3,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 app.get('/', function(req, res){
-				res.sendfile('index.html');
+				res.sendFile(__dirname+'/index.html');
 				});
 
 
@@ -205,12 +205,12 @@ io.sockets.on('connection', function(socket){
 								mineArea[roomname][data.areaY][data.areaX]=(who*-1);
 								}
 								else if(mineArea[roomname][data.areaY][data.areaX]==0){
-								mineArea[roomname]['score'][who]++;
+								mineArea[roomname]['score'][who]+=15;
 								recursiveSweep(data.areaX,data.areaY);
 								}
 								else{
 								mineArea[roomname][remainArea]--;
-								mineArea[roomname]['score'][who]++;
+								mineArea[roomname]['score'][who]+=mineArea[roomname][data.areaY][data.areaX];
 								tmp={remainArea:mineArea[roomname][remainArea],areaX:data.areaX,areaY:data.areaY,who:who,num:mineArea[roomname][data.areaY][data.areaX],score1:mineArea[roomname]['score'][1],score2:mineArea[roomname]['score'][2]};
 								emitPlayer(roomname,'sweep',tmp);
 
@@ -280,9 +280,8 @@ io.sockets.on('connection', function(socket){
 });
 
 
-http.listen(3000, function(){
-				console.log('listening on *:3000');
-				});
-
+http.listen(process.env.PORT,process.env.IP);// function(){
+				//console.log('listening on *:'+process.env.PORT);
+				//});
 
 

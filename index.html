@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html>
 <head>
@@ -8,14 +9,14 @@
 </style>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="/socket.io/jquery.js"></script>
 <script>
 //1stTEST
-width =0;
-height= 0;
-size = 0;
+var width =0;
+var height= 0;
+var size = 0;
 var socket;
-
+var type;
 function init(mineX,mineY,canvasSize){
 		width = mineX;
 		height= mineY;
@@ -31,7 +32,7 @@ function init(mineX,mineY,canvasSize){
 		draw();
 }
 function socketInit(){
-		socket = io().connect('http://linux.cs.ccu.edu.tw:3000');
+		socket = io().connect(process.env.IP+':'+process.env.PORT);
 		socket.on('numUser',function(data){$('#onlineUsers').html('online users:  '+data.numUser);});
 		socket.on('disconnect',function(){console.log('disconnect');});
 		socket.on('message',function(data){document.getElementById('message').value = data.msg;});
